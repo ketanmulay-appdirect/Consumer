@@ -4,6 +4,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Component;
 
 import com.appdirect.hackathon.hashlib.Hash;
@@ -11,6 +13,7 @@ import com.appdirect.iaas.consumer.bean.DataBean;
 import com.appdirect.iaas.consumer.bean.DataWrapper;
 
 @Component
+@Slf4j
 public class DataProcessor {
     public boolean validateRetrievedData(DataWrapper dataWrapper) {
         List<String> ids = getListOfIds(dataWrapper);
@@ -22,28 +25,48 @@ public class DataProcessor {
         }
         return false;
     }
-    
-    public void processData(DataWrapper dataWrapper) {
-        validateRetrievedData(dataWrapper);
 
-        switch (dataWrapper.getChunkId()) {
-            case 1: retainAllData(dataWrapper);
-                    break;
-            case 2: filterSomeData(dataWrapper);
-                    break;
-            case 3: handleErrorDuringParsing(dataWrapper);
-                    break;
-        }
-        System.out.println("-----------------------------------------------------------");
-        System.out.println("Processed Data -> ");
-        System.out.println(dataWrapper);
-        System.out.println("-----------------------------------------------------------");
-
+    public boolean validateProcessedData(DataWrapper dataWrapper) {
         List<String> ids = getListOfIds(dataWrapper);
+
         try {
-            Hash.validateAndNotify(ids, dataWrapper.getChecksum(), String.valueOf(dataWrapper.getChunkId()), "ketan.mulay@appdirect.com");
+            return Hash.validateAndNotify(ids, dataWrapper.getChecksum(), String.valueOf(dataWrapper.getChunkId()), "ketan.mulay@appdirect.com");
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
+        }
+        return false;
+    }
+    
+    public void processData(DataWrapper dataWrapper) {
+        if(validateRetrievedData(dataWrapper)) {
+
+            switch (dataWrapper.getChunkId()) {
+                case 1:
+                    retainAllData(dataWrapper);
+                    break;
+                case 2:
+                    filterSomeData(dataWrapper);
+                    break;
+                case 3:
+                    handleErrorDuringParsing(dataWrapper);
+                    break;
+            }
+            log.info("-----------------------------------------------------------");
+            log.info("Processed Data -> ");
+            log.info(dataWrapper.toString());
+            log.info("-----------------------------------------------------------");
+
+            if(!validateProcessedData(dataWrapper)) {
+                log.error("############################################################");
+                log.error("Error while validating processed chunk data with id -> {}  - skipped!!!", dataWrapper.getChunkId());
+                log.error(dataWrapper.toString());
+                log.error("############################################################");
+            }
+        } else {
+            log.error("############################################################");
+            log.error("Error while validating retrieved chunk data with id -> {}  - skipped!!!", dataWrapper.getChunkId());
+            log.error(dataWrapper.toString());
+            log.error("############################################################");
         }
     }
     
