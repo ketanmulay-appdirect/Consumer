@@ -75,7 +75,7 @@ public class DataProcessor {
     }
 
     /**
-     * Scenario to mimic all data getting processed completly without any error
+     * Scenario to mimic all data getting processed completely without any error
      * As a processing - adding commission of 3 bucks in total
      */
     private void retainAllData(DataWrapper dataWrapper) {
