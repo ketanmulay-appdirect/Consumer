@@ -73,17 +73,29 @@ public class DataProcessor {
     private List<String> getListOfIds(DataWrapper dataWrapper) {
         return dataWrapper.getDataBeans().stream().map(DataBean::getId).collect(Collectors.toList());
     }
-    
+
+    /**
+     * Scenario to mimic all data getting processed completly without any error
+     * As a processing - adding commission of 3 bucks in total
+     */
     private void retainAllData(DataWrapper dataWrapper) {
         List<DataBean> dataBeanList = dataWrapper.getDataBeans().stream().peek(d -> d.setTotal(d.getTotal() + 3)).collect(Collectors.toList());
         dataWrapper.setDataBeans(dataBeanList);
     }
 
+    /**
+     * Scenario to mimic some data lost during processing
+     * As a processing - dropping even numbered ids
+     */
     private void filterSomeData(DataWrapper dataWrapper) {
         List<DataBean> dataBeanList = dataWrapper.getDataBeans().stream().filter(d -> Integer.parseInt(d.getId())%2==0).collect(Collectors.toList());
         dataWrapper.setDataBeans(dataBeanList);
     }
 
+    /**
+     * Scenario to mimic some data having valid error and handle it to continue processing
+     * As a processing - cleared data for beans with odd ids
+     */
     private void handleErrorDuringParsing(DataWrapper dataWrapper) {
         List<DataBean> dataBeanList = dataWrapper.getDataBeans().stream().peek(d -> processData(d)).collect(Collectors.toList());
         dataWrapper.setDataBeans(dataBeanList);
